@@ -68,6 +68,25 @@ image.
 `resolution` (optional, e.g. `1920x1080`) is informational and shown in the
 on-screen diagnostic overlay.
 
+## Fullscreen & kiosk mode
+
+The player has a small **Fullscreen** button (top-right) that switches to true
+fullscreen on tap/click and hides itself once active. Browsers forbid a page
+from going fullscreen on its own — it always requires a user gesture — so this
+button is the most a web page can do.
+
+For unattended displays, launch the browser in **kiosk mode** instead; it boots
+straight into borderless fullscreen with no toolbars and the button never needs
+touching. With Chrome/Chromium:
+
+```bash
+chromium --kiosk --app=https://<domain>/<id> \
+  --noerrdialogs --disable-infobars --incognito \
+  --autoplay-policy=no-user-gesture-required --disable-session-crashed-bubble
+```
+
+Set that to run on boot and the screen comes up fullscreen on the right page.
+
 ## Priority image override
 
 For event-driven "show this now" moments, set a per-screen **priority image**.
