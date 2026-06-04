@@ -2,9 +2,10 @@
 
 A tiny Cloudflare Worker that replaces ScreenCloud for "point a kiosk at a URL
 and change it remotely." Each screen is a cheap mini-PC running a browser in
-fullscreen/kiosk mode, pointed once at `https://<worker>/screen/<id>`. The Worker
-stores per-screen settings (the URL to show, orientation/resolution, and an
-optional priority image), serves the player page, and exposes a small
+fullscreen/kiosk mode, pointed once at `https://<worker>/screen/<id>` (or, on a
+custom domain, the shorter `https://<domain>/<id>` — e.g. `screen.example.net/lobby-01`).
+The Worker stores per-screen settings (the URL to show, orientation/resolution,
+and an optional priority image), serves the player page, and exposes a small
 authenticated API your portal calls to change what a screen shows — on command.
 
 No scheduling, no playlists. Web URLs plus the occasional "show this now" image.
