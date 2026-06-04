@@ -575,9 +575,27 @@ const PLAYER_HTML = `<!doctype html>
       el.className = "layer";
       el.setAttribute("allow", "autoplay; fullscreen; encrypted-media");
       el.setAttribute("referrerpolicy", "no-referrer");
-      el.src = cfg.url;
+      el.src = embedUrl(cfg.url);
     }
     return el;
+  }
+
+  // Some sites only frame cleanly via a dedicated embed URL. Canva is the common
+  // one: a design's public ".../view" link (what you copy from the address bar)
+  // refuses to embed, but the same link with Canva's "embed" param — exactly
+  // what Canva's own "Smart embed" snippet uses — does. Convert it transparently
+  // so pasting the plain view link just works. Anything else is passed through.
+  function embedUrl(raw) {
+    try {
+      var u = new URL(raw);
+      var host = u.hostname.toLowerCase();
+      var isCanva = host === "canva.com" || host.slice(-10) === ".canva.com";
+      var isDesignView = /^\/design\/[^/]+\/[^/]+\/(view|watch)\/?$/.test(u.pathname);
+      if (isCanva && isDesignView && !u.searchParams.has("embed")) {
+        return u.origin + u.pathname + u.search + (u.search ? "&" : "?") + "embed" + u.hash;
+      }
+    } catch (e) {}
+    return raw;
   }
 
   // What makes two configs visually identical (so we don't reload needlessly).
