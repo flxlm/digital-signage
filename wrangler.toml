@@ -1,0 +1,21 @@
+name = "digital-signage"
+main = "src/index.ts"
+compatibility_date = "2024-09-23"
+
+# Per-screen settings live in KV. Created with:
+#   wrangler kv namespace create SIGNAGE
+# Paste the printed id below. For `wrangler dev` you can also create a preview
+# namespace (`wrangler kv namespace create SIGNAGE --preview`) and add a
+# `preview_id` here.
+[[kv_namespaces]]
+binding = "SIGNAGE"
+id = "<fill in after: wrangler kv namespace create SIGNAGE>"
+
+# Priority-image overrides live in R2. Created with:
+#   wrangler r2 bucket create digital-signage-media
+[[r2_buckets]]
+binding = "MEDIA"
+bucket_name = "digital-signage-media"
+
+# ADMIN_TOKEN is a secret, NOT stored here. Set it with:
+#   wrangler secret put ADMIN_TOKEN
