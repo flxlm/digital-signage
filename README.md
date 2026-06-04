@@ -87,20 +87,34 @@ chromium --kiosk --app=https://<domain>/<id> \
 
 Set that to run on boot and the screen comes up fullscreen on the right page.
 
-## Priority image override
+## Priority override (image / video / web page, scheduled)
 
-For event-driven "show this now" moments, set a per-screen **priority image**.
-While set, the player shows it full-screen (letterboxed on black, orientation
-applied) **instead of** the URL. Clear it and the screen reverts to its URL — no
-reconfiguration.
+For event-driven "show this now" (or "show this later") moments, set a per-screen
+**priority override**. While active, the player shows it full-screen **instead of**
+the URL; outside its window it falls back to the URL — no reconfiguration.
 
-Images are stored in R2 under `priority/<id>/<uuid>.<ext>` (immutable → safely
-cacheable) and served from `/media/<key>` with a one-year immutable cache.
-Allowed types: `png`, `jpeg`, `webp`, `gif`; max ~10 MB.
+A priority can be:
 
-> Alternatively, your portal may write the object to R2 directly (its own
-> binding / presigned URL) and just set `priorityImage` via the normal screen
-> `PUT` — same field either way.
+- an **uploaded image or video** (stored in R2 under `priority/<id>/<uuid>.<ext>`,
+  served from `/media/<key>` with a one-year immutable cache and Range support for
+  video). Allowed: `png`, `jpeg`, `webp`, `gif`, `avif`; `mp4`, `webm`, `ogg`,
+  `mov`. Max ~100 MB per file.
+- a **URL** — an image, a video file, or a web page (auto-detected by extension;
+  web pages get the same Canva/Slides embed handling).
+
+Each override has an optional **schedule**: `from` and `until` (ISO date-times).
+The player shows it only while *now* is within `[from, until]` and flips on/off at
+the exact moment — so you can preprogram a visual to appear later and auto-expire.
+
+### How writes work
+
+- **URL priority:** `PUT /api/screen/:id/priority` with JSON `{ url, from?, until? }`.
+- **Upload priority (no admin token in the browser):** the portal calls
+  `POST /api/screen/:id/priority/upload` (authenticated) with `{ contentType, from?, until? }`
+  to mint a one-time `uploadUrl`; the browser then `PUT`s the file bytes straight
+  to that URL (`/api/upload/:token`), which streams them into R2 and sets the
+  priority. Single-use, expires in 15 min.
+- **Clear:** `DELETE /api/screen/:id/priority`.
 
 ## API reference
 
@@ -115,9 +129,11 @@ so `ADMIN_TOKEN` never reaches a browser.**
 | `GET` | `/api/screen/:id` | — | Poll config (Cache API → KV; `ETag`/`304`; `404` if unset). |
 | `PUT`/`POST` | `/api/screen/:id` | ✓ | Create/update a screen. |
 | `DELETE` | `/api/screen/:id` | ✓ | Delete a screen (+ its priority image). |
-| `PUT` | `/api/screen/:id/priority` | ✓ | Upload a priority image. |
-| `DELETE` | `/api/screen/:id/priority` | ✓ | Clear the priority image. |
-| `GET` | `/media/<key>` | — | Stream an R2 media object (long immutable cache). |
+| `PUT` | `/api/screen/:id/priority` | ✓ | Set a URL priority (`{ url, from?, until? }`). |
+| `POST` | `/api/screen/:id/priority/upload` | ✓ | Mint a one-time upload ticket (`{ contentType, from?, until? }`). |
+| `PUT` | `/api/upload/:token` | token | Stream the upload bytes into R2 and set the priority. |
+| `DELETE` | `/api/screen/:id/priority` | ✓ | Clear the priority override. |
+| `GET` | `/media/<key>` | — | Stream an R2 media object (long immutable cache; Range-aware). |
 | `GET` | `/api/screens` | ✓ | List all screens. |
 
 ### Examples
