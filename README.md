@@ -186,6 +186,28 @@ fullscreen/kiosk mode. Manage screens from your portal by calling the write APIs
 **server-side** (the admin token stays on the server). CORS is enabled so a
 browser UI *can* call them directly, but doing so would expose the token — don't.
 
+### Service binding (how the employee portal connects)
+
+The employee portal is itself a Cloudflare Worker, so it talks to this worker
+over a **service binding** rather than its public URL — a private
+worker-to-worker call that never leaves Cloudflare's network. On the portal
+worker:
+
+```jsonc
+// wrangler.jsonc
+"services": [{ "binding": "SIGNAGE_WORKER", "service": "digital-signage" }],
+"vars": { "SIGNAGE_PUBLIC_URL": "https://digital-signage.<subdomain>.workers.dev" }
+// plus the secret:  wrangler secret put SIGNAGE_ADMIN_TOKEN   (== this worker's ADMIN_TOKEN)
+```
+
+The portal still sends `Authorization: Bearer <ADMIN_TOKEN>` over the binding,
+because this worker stays publicly reachable for the kiosks (the player page and
+poll API), so its write endpoints must keep authenticating. `SIGNAGE_PUBLIC_URL`
+is used only to build the kiosk player links and image URLs that browsers open —
+the portal issues the binding request against that same origin so this worker's
+cache keys line up with the kiosks' public polls. No worker URL or token is
+stored in a database.
+
 ## Out of scope (possible future adds)
 
 `redirect`/proxy modes for non-embeddable sites, time-based scheduling,
