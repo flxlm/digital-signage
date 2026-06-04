@@ -9,7 +9,7 @@ compatibility_date = "2024-09-23"
 # `preview_id` here.
 [[kv_namespaces]]
 binding = "SIGNAGE"
-id = "<fill in after: wrangler kv namespace create SIGNAGE>"
+id = "7f3fe27a8d41421e82cef394067a6f6a"
 
 # Priority-image overrides live in R2. Created with:
 #   wrangler r2 bucket create digital-signage-media
