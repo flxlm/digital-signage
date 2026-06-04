@@ -585,12 +585,19 @@ const PLAYER_HTML = `<!doctype html>
   // refuses to embed, but the same link with Canva's "embed" param — exactly
   // what Canva's own "Smart embed" snippet uses — does. Convert it transparently
   // so pasting the plain view link just works. Anything else is passed through.
+  // NOTE: this whole script lives inside a JS template literal, so avoid regex
+  // literals with escaped slashes here — the escapes collapse at runtime and
+  // produce invalid JS that kills the whole player. Plain string ops only.
   function embedUrl(raw) {
     try {
       var u = new URL(raw);
       var host = u.hostname.toLowerCase();
       var isCanva = host === "canva.com" || host.slice(-10) === ".canva.com";
-      var isDesignView = /^\/design\/[^/]+\/[^/]+\/(view|watch)\/?$/.test(u.pathname);
+      var parts = u.pathname.split("/").filter(function (s) { return s; });
+      var isDesignView =
+        parts.length === 4 &&
+        parts[0] === "design" &&
+        (parts[3] === "view" || parts[3] === "watch");
       if (isCanva && isDesignView && !u.searchParams.has("embed")) {
         return u.origin + u.pathname + u.search + (u.search ? "&" : "?") + "embed" + u.hash;
       }
