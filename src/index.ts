@@ -145,6 +145,17 @@ async function route(req: Request, env: Env): Promise<Response> {
     }
   }
 
+  // GET /:id — bare player route for a custom domain, e.g. screen.savsav.net/lobby-01.
+  // Kept alongside /screen/:id (above) so existing kiosks keep working. Reserved
+  // top-level paths (api, media, the health check) are handled before this.
+  const bareMatch = pathname.match(/^\/([^/]+)$/);
+  if (bareMatch && method === "GET") {
+    const id = decodeURIComponent(bareMatch[1]);
+    if (id !== "api" && id !== "media" && id !== "favicon.ico") {
+      return servePlayerHtml(id);
+    }
+  }
+
   return json({ error: "Not found" }, 404);
 }
 
