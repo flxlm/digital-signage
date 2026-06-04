@@ -35,7 +35,10 @@ may not allow embedding."
 - **Google Slides** — File → Share → Publish to web → Embed:
   `https://docs.google.com/presentation/d/…/pub?start=true&loop=true&delayms=5000`
 - **Published Google Sheets / Docs** (`/pub?embedded=true`)
-- **Canva** public "Smart embed" links
+- **Canva** — share the design as "Anyone with the link can view", then paste
+  its public link (`https://www.canva.com/design/…/view`). The player adds
+  Canva's `embed` param automatically (the same thing Canva's "Smart embed"
+  snippet does), so the plain view link works.
 - **Looker Studio** reports (embeddable; enable embedding)
 - **Power BI** publish-to-web embed URLs
 - **YouTube** embeds (`https://www.youtube.com/embed/<id>?autoplay=1&mute=1&loop=1`)
