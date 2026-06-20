@@ -707,6 +707,9 @@ const PLAYER_HTML = `<!doctype html>
   :root { color-scheme: dark; }
   * { margin: 0; padding: 0; box-sizing: border-box; }
   html, body { width: 100%; height: 100%; overflow: hidden; background: #000; }
+  /* Hide the mouse cursor after a spell of inactivity (kiosk displays rarely
+     have a mouse, and a stray pointer over content looks untidy). */
+  body.idle, body.idle * { cursor: none !important; }
   #stage { position: fixed; inset: 0; background: #000; }
   /* The rotator sits inside the stage and is sized/rotated per orientation. */
   #rotator { position: absolute; top: 50%; left: 50%; transform-origin: center center; }
@@ -754,6 +757,21 @@ const PLAYER_HTML = `<!doctype html>
 
   // Fullscreen is handled by the browser/kiosk (e.g. Chrome's --kiosk mode or
   // the browser's own fullscreen control), so no in-page button is needed.
+
+  // Hide the mouse cursor after a few seconds of no pointer movement; show it
+  // again the moment the pointer moves. Keeps stray cursors off the display.
+  var IDLE_CURSOR_MS = 3000;
+  var idleTimer = null;
+  function showCursor() {
+    document.body.classList.remove("idle");
+    if (idleTimer) clearTimeout(idleTimer);
+    idleTimer = setTimeout(function () {
+      document.body.classList.add("idle");
+    }, IDLE_CURSOR_MS);
+  }
+  document.addEventListener("mousemove", showCursor);
+  document.addEventListener("mousedown", showCursor);
+  showCursor();
 
   var current = null;       // last applied config
   var etag = null;          // last seen ETag for conditional polling
