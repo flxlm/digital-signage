@@ -70,14 +70,12 @@ on-screen diagnostic overlay.
 
 ## Fullscreen & kiosk mode
 
-The player has a small **Fullscreen** button (top-right) that switches to true
-fullscreen on tap/click and hides itself once active. Browsers forbid a page
-from going fullscreen on its own — it always requires a user gesture — so this
-button is the most a web page can do.
+Use your browser's own fullscreen control (e.g. press `F11` in Chrome) to view
+the player borderless. Browsers forbid a page from going fullscreen on its own —
+it always requires a user gesture — so fullscreen is left to the browser.
 
 For unattended displays, launch the browser in **kiosk mode** instead; it boots
-straight into borderless fullscreen with no toolbars and the button never needs
-touching. With Chrome/Chromium:
+straight into borderless fullscreen with no toolbars. With Chrome/Chromium:
 
 ```bash
 chromium --kiosk --app=https://<domain>/<id> \

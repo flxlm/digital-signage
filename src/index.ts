@@ -732,19 +732,6 @@ const PLAYER_HTML = `<!doctype html>
     opacity: 0; transition: opacity 400ms ease; pointer-events: none;
   }
   #diag.show { opacity: 1; }
-  /* Tap target to enter fullscreen (browsers forbid auto-fullscreen without a
-     user gesture). Sits above the content; hidden once fullscreen is active. */
-  #fsbtn {
-    position: fixed; top: 16px; right: 16px; z-index: 20;
-    display: inline-flex; align-items: center; gap: 8px;
-    font-family: system-ui, -apple-system, Segoe UI, Roboto, sans-serif;
-    font-size: 14px; color: #eee; background: rgba(0,0,0,0.55);
-    border: 1px solid rgba(255,255,255,0.25); border-radius: 999px;
-    padding: 8px 14px; cursor: pointer; -webkit-appearance: none;
-    transition: opacity 300ms ease;
-  }
-  #fsbtn:hover { background: rgba(0,0,0,0.75); }
-  #fsbtn.hidden { display: none; }
 </style>
 </head>
 <body>
@@ -754,10 +741,6 @@ const PLAYER_HTML = `<!doctype html>
     <div class="msg">No content assigned yet. This screen will update automatically.</div>
   </div>
   <div id="diag"></div>
-  <button id="fsbtn" type="button" aria-label="Play fullscreen" title="Play fullscreen">
-    <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M8 3H5a2 2 0 0 0-2 2v3M16 3h3a2 2 0 0 1 2 2v3M8 21H5a2 2 0 0 1-2-2v-3M16 21h3a2 2 0 0 0 2-2v-3"></path></svg>
-    <span>Fullscreen</span>
-  </button>
 <script>
 (function () {
   var SCREEN_ID = "__SCREEN_ID__";
@@ -769,23 +752,8 @@ const PLAYER_HTML = `<!doctype html>
   var placeholder = document.getElementById("placeholder");
   var diag = document.getElementById("diag");
 
-  // Fullscreen on tap/click. Browsers forbid going fullscreen without a user
-  // gesture, so we expose a button and hide it once fullscreen is active. (For
-  // unattended kiosks, launch the browser in --kiosk mode and ignore this.)
-  var fsbtn = document.getElementById("fsbtn");
-  function enterFullscreen() {
-    var el = document.documentElement;
-    var fn = el.requestFullscreen || el.webkitRequestFullscreen || el.msRequestFullscreen;
-    if (fn) { try { fn.call(el); } catch (e) {} }
-  }
-  function syncFsBtn() {
-    var fs = document.fullscreenElement || document.webkitFullscreenElement;
-    if (fsbtn) fsbtn.classList.toggle("hidden", !!fs);
-  }
-  if (fsbtn) fsbtn.addEventListener("click", enterFullscreen);
-  document.addEventListener("fullscreenchange", syncFsBtn);
-  document.addEventListener("webkitfullscreenchange", syncFsBtn);
-  syncFsBtn();
+  // Fullscreen is handled by the browser/kiosk (e.g. Chrome's --kiosk mode or
+  // the browser's own fullscreen control), so no in-page button is needed.
 
   var current = null;       // last applied config
   var etag = null;          // last seen ETag for conditional polling
