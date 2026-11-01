@@ -719,6 +719,12 @@ const PLAYER_HTML = `<!doctype html>
   }
   .layer.visible { opacity: 1; }
   img.layer, video.layer { object-fit: contain; }
+  /* Never paint the browser's play button over a video: it is restarted by
+     the player itself (keepPlaying). */
+  video::-webkit-media-controls { display: none !important; }
+  video::-webkit-media-controls-start-playback-button { display: none !important; -webkit-appearance: none; }
+  video::-webkit-media-controls-overlay-play-button { display: none !important; -webkit-appearance: none; }
+  video::-webkit-media-controls-panel { display: none !important; }
   #placeholder {
     position: fixed; inset: 0; display: flex; flex-direction: column;
     align-items: center; justify-content: center; gap: 12px;
@@ -808,6 +814,35 @@ const PLAYER_HTML = `<!doctype html>
     return p;
   }
 
+  // A browser can refuse or drop the first play() (Safari will not start a
+  // video that is still invisible, which the layer is until its fade-in; a
+  // strict autoplay policy refuses until a gesture), leaving a paused video
+  // with a play triangle on screen. Keep asking until it plays, for as long
+  // as the element is on the page, and play on any touch or key too.
+  function keepPlaying(v) {
+    var play = function () {
+      if (!v.isConnected || !v.paused) return;
+      v.muted = true;
+      try { var r = v.play(); if (r && r.catch) r.catch(function () {}); } catch (e) {}
+    };
+    ["loadedmetadata", "loadeddata", "canplay", "pause", "stalled", "ended"].forEach(function (ev) {
+      v.addEventListener(ev, function () { setTimeout(play, 50); });
+    });
+    var gestures = ["pointerdown", "touchstart", "keydown", "click"];
+    gestures.forEach(function (ev) { document.addEventListener(ev, play, { passive: true }); });
+    document.addEventListener("visibilitychange", play);
+    var timer = setInterval(function () {
+      if (!v.isConnected && v.__added) {
+        clearInterval(timer);
+        gestures.forEach(function (ev) { document.removeEventListener(ev, play); });
+        document.removeEventListener("visibilitychange", play);
+        return;
+      }
+      if (v.isConnected) v.__added = true;
+      play();
+    }, 1000);
+  }
+
   function iframeLayer(src) {
     var el = document.createElement("iframe");
     el.className = "layer";
@@ -823,8 +858,11 @@ const PLAYER_HTML = `<!doctype html>
       var v = document.createElement("video");
       v.className = "layer";
       v.src = p.url;
-      v.autoplay = true; v.muted = true; v.loop = true; v.playsInline = true;
-      v.setAttribute("muted", ""); v.setAttribute("playsinline", "");
+      v.autoplay = true; v.muted = true; v.defaultMuted = true; v.loop = true; v.playsInline = true;
+      v.setAttribute("muted", ""); v.setAttribute("playsinline", ""); v.setAttribute("autoplay", "");
+      v.setAttribute("loop", ""); v.setAttribute("preload", "auto");
+      v.controls = false; v.disablePictureInPicture = true;
+      keepPlaying(v);
       return v;
     }
     if (p && p.kind === "image") {
@@ -924,7 +962,12 @@ const PLAYER_HTML = `<!doctype html>
     } else if (next.tagName === "VIDEO") {
       // Video has no "load" event; reveal once it can play (or after a timeout).
       var doneV = false;
-      var goV = function () { if (!doneV) { doneV = true; try { next.play(); } catch (e) {} reveal(); } };
+      var goV = function () {
+        if (doneV) return;
+        doneV = true;
+        reveal();
+        try { var r = next.play(); if (r && r.catch) r.catch(function () {}); } catch (e) {}
+      };
       next.oncanplay = goV; next.onloadeddata = goV; next.onerror = goV;
       setTimeout(goV, 2500);
     } else {
